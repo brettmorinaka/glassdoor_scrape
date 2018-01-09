@@ -22,7 +22,7 @@ class InterviewSpider(CrawlSpider):
 
         #  The rule will tell the spider to continiously look for the next page to scrape.
         #  If it finds another page to scrape, it will run the parse_search_results() method on it and continually capture new records
-        # Rule(LinkExtractor(allow=(), restrict_xpaths=('//a[@class="the-next-page"]',)), callback="parse_search_results", follow = True),
+        Rule(LinkExtractor(allow=(), restrict_xpaths=("//li[@class='next']",)), callback="parse_search_results", follow = True),
     )
 
     def parse_start_url(self, response):
@@ -33,7 +33,7 @@ class InterviewSpider(CrawlSpider):
 
         # Select parent elements containing each search result
         search_results = response.xpath("//div[@id='EmployerInterviews']//li[@class=' empReview cf ']")
-        company_name = response.xpath("//div[@class='margTop']//div[@itemprop='child']//span[@itemprop='title']//text()").extract()
+        company_name = response.xpath("//div[@class='margTop']//div[@itemprop='child']//span[@itemprop='title']//text()").extract_first()
 
         # Iterate through each "item" in the search results
         for row in search_results:
@@ -48,11 +48,11 @@ class InterviewSpider(CrawlSpider):
             search_item["offer_status"] = row.xpath("(.//div[@class='interviewOutcomes']//div[@class='cell']//span//text())[1]").extract_first(default="N/A")
             search_item["interview_experience"] = row.xpath("(.//div[@class='interviewOutcomes']//div[@class='cell']//span//text())[2]").extract_first(default="N/A")
             search_item["interview_difficulty"] = row.xpath("(.//div[@class='interviewOutcomes']//div[@class='cell']//span//text())[3]").extract_first(default="N/A")
-            search_item["application_proccess"] = row.xpath(".//div[@class='description']//p[@class='applicationDetails mainText truncateThis wrapToggleStr']").extract_first(default="N/A")
-            search_item["interview_description"] = row.xpath(".//div[@class='description']//p[contains(@class, 'interviewDetails')]//text()").extract()
-
-            # come back to this one. It includes "Answer Question" text that will need to be cleaned up
-            search_item["interview_questions"] = row.xpath(".//div[@class='description']//span[contains(@class, 'interviewQuestion')]//text()").extract()
+            
+            #FIX THESE
+            search_item["application_proccess"] = row.xpath(".//p[contains(@class, 'applicationDetails')]//text()").extract_first(default="N/A")
+            search_item["interview_description"] = row.xpath(".//p[contains(@class, 'interviewDetails')]//text()").extract()
+            search_item["interview_questions"] = row.xpath(".//span[contains(@class, 'interviewQuestion')]//text()").extract()
     
             
             yield search_item
